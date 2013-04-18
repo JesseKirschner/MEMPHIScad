@@ -4,11 +4,13 @@
         <title> MEMPHIS in ANTWERPEN </title>
         
     </head>
-    <body>
+    <body style="cursor: none;">
     
         <script type="text/javascript" src="https://raw.github.com/mrdoob/three.js/master/build/three.min.js"></script>
-        <script type="text/javascript" src="https://raw.github.com/mrdoob/three.js/3d354a70d5a84a3d513caf8a8bc30c95b3a338e2/examples/js/controls/TrackballControls.js"></script>
+        <script type="text/javascript" src="https://raw.github.com/mrdoob/three.js/master/examples/js/controls/TrackballControls.js"></script>
         <script type="text/javascript" src="https://raw.github.com/chandlerprall/ThreeCSG/master/ThreeCSG.js"></script>
+        <script type="text/javascript" src="https://raw.github.com/leapmotion/leapjs/master/leap.js"></script>
+        
         <script type="text/javascript">
     
 	'use strict';
@@ -19,6 +21,9 @@
 		//dit is alles om met de muis te kunnen werken
 		initEventHandling, intersect_plane, selected_cell = null, controls,
 		mouse_position = new THREE.Vector3;
+        
+      var state  = null;
+      var startFrame = null;
 	
 	initScene = function() {
 		projector = new THREE.Projector;
@@ -45,25 +50,49 @@
 		scene.add( camera );
         
         (function() {
-    	var start_time = (new Date()).getTime();
+//     	var start_time = (new Date()).getTime();
+// 
+// 		var cube_geometry = new THREE.CubeGeometry( 3, 3, 3 );
+// 		var cube_mesh = new THREE.Mesh( cube_geometry );
+// 		cube_mesh.position.x = 0;
+// 		var cube_bsp = new ThreeBSP( cube_mesh );
+//         
+//         var cube = cube_bsp.toMesh( new THREE.MeshLambertMaterial({ wireframe: true, color: "black", shading: THREE.SmoothShading }) );
+//     	scene.add( cube );
+        
 
-		var cube_geometry = new THREE.CubeGeometry( 3, 3, 3 );
-		var cube_mesh = new THREE.Mesh( cube_geometry );
-		cube_mesh.position.x = -7;
-		var cube_bsp = new ThreeBSP( cube_mesh );
+		// var sphere_geometry = new THREE.SphereGeometry( 1.8, 32, 32 );
+		// var sphere_mesh = new THREE.Mesh( sphere_geometry );
+		// sphere_mesh.position.x = 0;
+		// var sphere_bsp = new ThreeBSP( sphere_mesh );
 
-		var sphere_geometry = new THREE.SphereGeometry( 1.8, 32, 32 );
-		var sphere_mesh = new THREE.Mesh( sphere_geometry );
-		sphere_mesh.position.x = -7;
-		var sphere_bsp = new ThreeBSP( sphere_mesh );
+		// var subtract_bsp = cube_bsp.subtract( sphere_bsp );
+		// var result = subtract_bsp.toMesh( new THREE.MeshLambertMaterial({ wireframe: true, color: "black", shading: THREE.SmoothShading }) );
+		// result.geometry.computeVertexNormals();
+		//scene.add( result );
 
-		var subtract_bsp = cube_bsp.subtract( sphere_bsp );
-		var result = subtract_bsp.toMesh( new THREE.MeshLambertMaterial({ shading: THREE.SmoothShading, map: THREE.ImageUtils.loadTexture('texture.png') }) );
-		result.geometry.computeVertexNormals();
-		scene.add( result );
-
-		console.log( 'Example 1: ' + ((new Date()).getTime() - start_time) + 'ms' );
+		//console.log( 'Example 1: ' + ((new Date()).getTime() - start_time) + 'ms' );
 	})();
+    
+    
+	//LEAP
+	Leap.loop(function(frame) {
+        if (frame.valid) {
+          if (state == null) {
+            if (frame.hands.length > 0 && frame.pointables.length <= 1) {
+              startFrame = frame;
+              state = 'moving';
+            }
+          } else if (state == 'moving') {
+            var t = startFrame.translation(frame);
+            console.log(t[0] +  " - " + t[1] +  " - " + t[2])
+            if (frame.hands.length == 1 || frame.pointables.legnth > 1) {
+              state = null;
+            }
+          }
+        }
+        renderer.render(scene, camera);
+      });
 		
 		requestAnimationFrame( render );
 	};
@@ -75,37 +104,6 @@
 		controls.update();
 		renderer.render( scene, camera );
 	};
-	
-	//Mouse
-
-	initEventHandling = (function() {
-		var _vector = new THREE.Vector3,
-			projector = new THREE.Projector(),
-			handleMouseDown, handleMouseMove, handleMouseUp;
-		
-		handleMouseDown = function( evt ) {
-			if(evt.button = 2){
-				console.log("hier met de raytracing enzo");
-			}
-		};
-		
-		handleMouseMove = function( evt ) {
-			if(evt.button = 2){
-			}
-		};
-		
-		handleMouseUp = function( evt ) {
-			if(evt.button = 2){
-			}
-			
-		};
-		
-		return function() {
-			renderer.domElement.addEventListener( 'mousedown', handleMouseDown );
-			renderer.domElement.addEventListener( 'mousemove', handleMouseMove );
-			renderer.domElement.addEventListener( 'mouseup', handleMouseUp );
-		};
-	})();
 	
 	window.onload = initScene;
 	
