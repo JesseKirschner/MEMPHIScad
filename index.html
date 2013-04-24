@@ -10,6 +10,7 @@
         <script type="text/javascript" src="https://raw.github.com/mrdoob/three.js/master/examples/js/controls/TrackballControls.js"></script>
         <script type="text/javascript" src="https://raw.github.com/chandlerprall/ThreeCSG/master/ThreeCSG.js"></script>
         <script type="text/javascript" src="https://raw.github.com/leapmotion/leapjs/master/leap.js"></script>
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
         
         <script type="text/javascript">
     
@@ -19,7 +20,7 @@
 		projector, renderer, render_stats, physics_stats, scene, camera,
         
 		//dit is alles om met de muis te kunnen werken
-		initEventHandling, intersect_plane, selected_cell = null, controls,
+		controls,
 		mouse_position = new THREE.Vector3;
         
       var state  = null;
@@ -49,6 +50,26 @@
 		
 		scene.add( camera );
         
+        $.fn.center = function () {
+            this.css("position","absolute");
+            this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) + 
+                                                $(window).scrollTop()) + "px");
+            this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) + 
+                                                $(window).scrollLeft()) + "px");
+            return this;
+        }
+        
+
+        var div1 = document.createElement('div');
+        div1.id = "calibrator";
+        div1.style.position = 'relative';
+        div1.innerHTML = "please point your finger at the topleft of this window. NOW!!!";
+        
+        document.body.appendChild(div1);
+        
+        $("#calibrator").center();
+        
+        
         (function() {
 //     	var start_time = (new Date()).getTime();
 // 
@@ -74,6 +95,7 @@
 		//console.log( 'Example 1: ' + ((new Date()).getTime() - start_time) + 'ms' );
 	})();
     
+    console.log(Leap);
     
 	//LEAP
 	Leap.loop(function(frame) {
@@ -81,17 +103,25 @@
           if (state == null) {
             if (frame.hands.length > 0 && frame.pointables.length <= 1) {
               startFrame = frame;
-              state = 'moving';
+              
+                var t = startFrame.pointables[0];
+                var s = t.tipPosition[0];
+                //$(this).text(t[0] +  " - " + t[1] +  " - " + t[2]);
+                //var p = startFrame.position(frame);
+                //$(this).text(p);
+                
+                div1.innerHTML = "please point your finger at the topleft of this window. NOW!!!" + s;
+                console.log(s);
+                
+              //state = 'moving';
             }
           } else if (state == 'moving') {
-            var t = startFrame.translation(frame);
-            console.log(t[0] +  " - " + t[1] +  " - " + t[2])
-            if (frame.hands.length == 1 || frame.pointables.legnth > 1) {
-              state = null;
+                if (frame.hands.length == 1 || frame.pointables.length > 1) {
+                    state = null;
             }
           }
         }
-        renderer.render(scene, camera);
+        //renderer.render(scene, camera);
       });
 		
 		requestAnimationFrame( render );
